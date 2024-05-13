@@ -38,34 +38,35 @@ public class TokenCacheService {
 		if (response.getBody() != null) {
 			var builder = new RuleBuilder().build();
 			var role = response.getBody();
-			role.getRoles().stream().forEach(roleWithRuleDTO -> {
-				roleWithRuleDTO.getRules().forEach(rule -> {
-					switch (rule.getOperation()) {
-						case "READ": {
-							builder.addAll(new RuleBuilder()
-								.allow()
-								.read()
-								.allResources()
-								.withAnyId()
-								.build());
-							break;
-						}
-						case "WRITE": {
-							builder.addAll(new RuleBuilder()
-								.allow()
-								.write()
-								.allResources()
-								.withAnyId()
-								.build());
-							break;
-						}
-						case "ALL": {
+			role.getUser().getRoles().forEach(roleWithRuleDTO -> {
+				//todo implements rules analyses
+//				roleWithRuleDTO.getRules().forEach(rule -> {
+//					switch (rule.getOperation()) {
+//						case "READ": {
+//							builder.addAll(new RuleBuilder()
+//								.allow()
+//								.read()
+//								.allResources()
+//								.withAnyId()
+//								.build());
+//							break;
+//						}
+//						case "WRITE": {
+//							builder.addAll(new RuleBuilder()
+//								.allow()
+//								.write()
+//								.allResources()
+//								.withAnyId()
+//								.build());
+//							break;
+//						}
+//						case "ALL": {
 							builder.addAll(new RuleBuilder().allowAll().build());
-							break;
-						}
-					}
-
-				});
+//							break;
+//						}
+//					}
+//
+//				});
 			});
 			return builder;
 		}
