@@ -10,6 +10,7 @@ import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @EnableCaching
@@ -17,8 +18,11 @@ import java.util.concurrent.TimeUnit;
 public class SecurityConfiguration {
 
 
-	@Value("${security.service.url:http://localhost:8081/account/info}")
+	@Value("${security.service.url:http://localhost:8090/account/info}")
 	private String securityServiceUrl;
+
+	@Value("#{'${security.service.allowed-urls:swagger-ui,api-docs}'.split(',')}")
+	private List<String> allowedUrls;
 
 	@Bean
 	public TokenCacheService tokenCacheService() {
@@ -27,7 +31,7 @@ public class SecurityConfiguration {
 
 	@Bean
 	public AuthorizationInterceptor authorizationInterceptor(TokenCacheService tokenCacheService) {
-		return new AuthorizationInterceptor(tokenCacheService);
+		return new AuthorizationInterceptor(tokenCacheService, allowedUrls);
 	}
 
 	@Bean
