@@ -1,9 +1,9 @@
 package earth.angelson.security.cache;
 
 
-import earth.angelson.security.dto.RoleAttachmentsDTO;
 import ca.uhn.fhir.rest.server.interceptor.auth.IAuthRule;
 import ca.uhn.fhir.rest.server.interceptor.auth.RuleBuilder;
+import earth.angelson.security.dto.UserRoleAttachmentsDTO;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -29,43 +29,24 @@ public class TokenCacheService {
 		headers.set("Authorization", token);
 
 		// Create HttpEntity with headers
-		HttpEntity<RoleAttachmentsDTO> entity = new HttpEntity<>(headers);
+		HttpEntity<UserRoleAttachmentsDTO> entity = new HttpEntity<>(headers);
 
-		ResponseEntity<RoleAttachmentsDTO> response =
-			restTemplate.exchange(url, HttpMethod.GET, entity, RoleAttachmentsDTO.class);
+		ResponseEntity<UserRoleAttachmentsDTO> response =
+			restTemplate.exchange(url, HttpMethod.GET, entity, UserRoleAttachmentsDTO.class);
 
 
 		if (response.getBody() != null) {
 			var builder = new RuleBuilder().build();
-			var role = response.getBody();
-			role.getRoles().stream().forEach(roleWithRuleDTO -> {
-				roleWithRuleDTO.getRules().forEach(rule -> {
-					switch (rule.getOperation()) {
-						case "READ": {
-							builder.addAll(new RuleBuilder()
-								.allow()
-								.read()
-								.allResources()
-								.withAnyId()
-								.build());
-							break;
-						}
-						case "WRITE": {
-							builder.addAll(new RuleBuilder()
-								.allow()
-								.write()
-								.allResources()
-								.withAnyId()
-								.build());
-							break;
-						}
-						case "ALL": {
-							builder.addAll(new RuleBuilder().allowAll().build());
-							break;
-						}
-					}
+			var userInfo = response.getBody();
 
-				});
+			userInfo.user().roles().forEach(role -> {
+				switch (role.name().toUpperCase()) {
+					case "ADMIN", "PRACTITIONER", "OPERATOR": {
+						builder.addAll(new RuleBuilder().allowAll().build());
+						break;
+					}
+				}
+
 			});
 			return builder;
 		}
