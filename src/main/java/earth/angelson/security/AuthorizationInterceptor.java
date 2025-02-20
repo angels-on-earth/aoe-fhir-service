@@ -1,11 +1,9 @@
 package earth.angelson.security;
 
-import ca.uhn.fhir.interceptor.api.Pointcut;
-import ca.uhn.fhir.rest.server.exceptions.ForbiddenOperationException;
+import ca.uhn.fhir.rest.server.interceptor.auth.RuleBuilder;
 import earth.angelson.security.cache.TokenCacheService;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.server.interceptor.auth.IAuthRule;
-import org.hl7.fhir.instance.model.api.IBaseResource;
 
 import java.util.List;
 
@@ -13,24 +11,23 @@ import java.util.List;
 public class AuthorizationInterceptor extends ca.uhn.fhir.rest.server.interceptor.auth.AuthorizationInterceptor {
 
 	private final TokenCacheService tokenCacheService;
+	private final List<String> allowedUrls;
 
-	public AuthorizationInterceptor(TokenCacheService tokenCacheService) {
+	public AuthorizationInterceptor(TokenCacheService tokenCacheService, List<String> allowedUrls) {
 		this.tokenCacheService = tokenCacheService;
+		this.allowedUrls = allowedUrls;
 	}
 
 	@Override
 	public List<IAuthRule> buildRuleList(RequestDetails theRequestDetails) {
 		String authHeader = theRequestDetails.getHeader("Authorization");
 
-		List<IAuthRule> rules = tokenCacheService.getData(authHeader);
-		if (rules == null || rules.isEmpty()) {
-			throw new ForbiddenOperationException("Unauthorized request");
+		for (String url : allowedUrls) {
+			if (theRequestDetails.getCompleteUrl().contains(url)) {
+				return new RuleBuilder().allowAll().build();
+			}
 		}
-		return rules;
-	}
 
-	@Override
-	public void hookOutgoingResponse(RequestDetails theRequestDetails, IBaseResource theResponseObject, Pointcut thePointcut) {
-		super.hookOutgoingResponse(theRequestDetails, theResponseObject, thePointcut);
+		return tokenCacheService.getData(authHeader);
 	}
 }
