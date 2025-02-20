@@ -1,8 +1,11 @@
 package earth.angelson.security;
 
+import ca.uhn.fhir.interceptor.api.Pointcut;
+import ca.uhn.fhir.rest.server.exceptions.ForbiddenOperationException;
 import earth.angelson.security.cache.TokenCacheService;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.server.interceptor.auth.IAuthRule;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 
 import java.util.List;
 
@@ -19,7 +22,15 @@ public class AuthorizationInterceptor extends ca.uhn.fhir.rest.server.intercepto
 	public List<IAuthRule> buildRuleList(RequestDetails theRequestDetails) {
 		String authHeader = theRequestDetails.getHeader("Authorization");
 
-		//todo if service return empty unauthorized request 403
-		return tokenCacheService.getData(authHeader);
+		List<IAuthRule> rules = tokenCacheService.getData(authHeader);
+		if (rules == null || rules.isEmpty()) {
+			throw new ForbiddenOperationException("Unauthorized request");
+		}
+		return rules;
+	}
+
+	@Override
+	public void hookOutgoingResponse(RequestDetails theRequestDetails, IBaseResource theResponseObject, Pointcut thePointcut) {
+		super.hookOutgoingResponse(theRequestDetails, theResponseObject, thePointcut);
 	}
 }
