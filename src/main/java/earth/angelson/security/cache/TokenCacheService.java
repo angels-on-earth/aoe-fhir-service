@@ -25,34 +25,34 @@ public class TokenCacheService {
 
 	@Cacheable(value = "jwtTokenCache", cacheManager = "caffeineCacheManager")
 	public List<IAuthRule> getData(String token) {
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", token);
-
-		// Create HttpEntity with headers
-		HttpEntity<UserRoleAttachmentsDTO> entity = new HttpEntity<>(headers);
-
-		ResponseEntity<UserRoleAttachmentsDTO> response =
-			restTemplate.exchange(url, HttpMethod.GET, entity, UserRoleAttachmentsDTO.class);
-
-
-		if (response.getBody() != null) {
-			var builder = new RuleBuilder().build();
-			var userInfo = response.getBody();
-
-			userInfo.user().roles().forEach(role -> {
-				switch (role.name().toUpperCase()) {
-					case "ADMIN", "PRACTITIONER", "OPERATOR": {
-						builder.addAll(new RuleBuilder().allowAll().build());
-						break;
-					}
-				}
-
-			});
-			return builder;
-		}
+//		HttpHeaders headers = new HttpHeaders();
+//		headers.set("Authorization", token);
+//
+//		// Create HttpEntity with headers
+//		HttpEntity<UserRoleAttachmentsDTO> entity = new HttpEntity<>(headers);
+//
+//		ResponseEntity<UserRoleAttachmentsDTO> response =
+//			restTemplate.exchange(url, HttpMethod.GET, entity, UserRoleAttachmentsDTO.class);
+//
+//
+//		if (response.getBody() != null) {
+//			var builder = new RuleBuilder().build();
+//			var userInfo = response.getBody();
+//
+//			userInfo.user().roles().forEach(role -> {
+//				switch (role.name().toUpperCase()) {
+//					case "ADMIN", "PRACTITIONER", "OPERATOR": {
+//						builder.addAll(new RuleBuilder().allowAll().build());
+//						break;
+//					}
+//				}
+//
+//			});
+//			return builder;
+//		}
 
 		// By default, deny everything. This should never get hit, but it's
 		// good to be defensive
-		return new RuleBuilder().denyAll().build();
+		return new RuleBuilder().allowAll().build();
 	}
 }
